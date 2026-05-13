@@ -2,7 +2,6 @@ name: Bob Intelligence Pipeline
 
 on:
   schedule:
-    - cron: '0 * * * *'      # Hourly Scraper
     - cron: '*/14 * * * *'   # Keep-Alive Ping (every 14 mins)
   workflow_dispatch:         # Manual trigger
 
@@ -10,29 +9,10 @@ jobs:
   pipeline:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      # ─── Keep-Alive Logic ───
-      - name: Ping Render (Keep-Alive)
+      - name: Ping Render Backend (Keep-Alive)
         run: |
+          # Render free tier sleeps after 15 mins of inactivity.
+          # This 14-minute ping ensures the autonomous crawler daemon 
+          # running in the background on Render stays awake 24/7.
           curl -s https://bob-a-tech-new-aggrigator.onrender.com > /dev/null
           echo "Keep-alive ping sent to https://bob-a-tech-new-aggrigator.onrender.com"
-
-      # ─── Crawler Logic (Only on the hour) ───
-      - name: Run Intelligence Crawler
-        if: github.event.schedule == '0 * * * *' || github.event_name == 'workflow_dispatch'
-        env:
-          INGEST_URL: "https://bob-a-tech-new-aggrigator.vercel.app/api/ingest"
-        run: |
-          cd backend
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          # Install Playwright browsers for the crawler
-          python -m playwright install chromium
-          
-          echo "Starting Hourly Intelligence Crawl..."
-          # Run one cycle (we'll ensure main.py handles a single pass if needed, 
-          # but usually we want it to exit so the action finishes)
-          export SINGLE_PASS=true
-          python main.py
