@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:all": "concurrently \"npm run dev\" \"set PYTHONIOENCODING=utf-8 && ..\\backend\\.venv\\Scripts\\python.exe ..\\backend\\main.py\"",
-    "build": "next build",
+    "build": "node migrate.mjs && next build",
     "start": "next start",
     "lint": "next lint"
   },
