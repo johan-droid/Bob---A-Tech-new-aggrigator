@@ -13,6 +13,12 @@ services:
         value: 18.17.0
       - key: NEXT_PUBLIC_SITE_URL
         value: https://bob-a-tech-new-aggrigator.onrender.com
+      - key: NEXT_PUBLIC_SITE_NAME
+        value: Bob
+      - key: NEXT_PUBLIC_SITE_DESCRIPTION
+        value: SaaS-grade news intelligence. Curated technical signals from 20+ high-fidelity sources.
+      - key: NEXT_PUBLIC_CONTACT_EMAIL
+        value: contact@bobintelligence.dev
 
   - type: web
     name: bob-intelligence-backend

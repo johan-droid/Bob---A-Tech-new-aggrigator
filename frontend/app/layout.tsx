@@ -7,9 +7,21 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair' });
 const jetbrains = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains' });
 
+const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME || 'Bob';
+const SITE_DESCRIPTION = process.env.NEXT_PUBLIC_SITE_DESCRIPTION || 'SaaS-grade news intelligence. Curated technical signals from high-fidelity sources.';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://bob-a-tech-new-aggrigator.onrender.com';
+
 export const metadata: Metadata = {
-  title: 'Bob — Intelligence Aggregator',
-  description: 'A SaaS-grade news intelligence system. Curated technical signals from 8+ high-fidelity sources.',
+  title: `${SITE_NAME} — Intelligence Aggregator`,
+  description: SITE_DESCRIPTION,
+  metadataBase: new URL(SITE_URL),
+  openGraph: {
+    title: `${SITE_NAME} — Intelligence Aggregator`,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    type: 'website',
+  },
 };
 
 export default function RootLayout({
@@ -24,7 +36,7 @@ export default function RootLayout({
           <nav className="topbar">
             <Link href="/" className="topbar-brand">
               <div className="topbar-logo">B</div>
-              <span className="topbar-name">Bob</span>
+              <span className="topbar-name">{SITE_NAME}</span>
             </Link>
 
             <div className="topbar-nav">
@@ -49,7 +61,7 @@ export default function RootLayout({
               <Link href="/archive">Archive</Link>
               <Link href="/disclaimer">Disclaimer</Link>
             </div>
-            <p>&copy; {new Date().getFullYear()} Bob Intelligence Aggregator</p>
+            <p>&copy; {new Date().getFullYear()} {SITE_NAME} Intelligence Aggregator</p>
           </footer>
         </div>
       </body>
