@@ -1,0 +1,6 @@
+crawl4ai
+beautifulsoup4
+requests
+python-dotenv
+asyncio
+playwright

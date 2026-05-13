@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: bob-news-frontend
+    env: node
+    plan: free
+    region: oregon
+    buildCommand: cd frontend && npm install && npm run build
+    startCommand: cd frontend && npm run start
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: NODE_VERSION
+        value: 18.17.0
+      - key: NEXT_PUBLIC_SITE_URL
+        sync: false # e.g. https://bob-news.onrender.com
+
+  # Note: Render Background Workers are not available on the free plan.
+  # We are using GitHub Actions as the "Backend Crawler" instead.

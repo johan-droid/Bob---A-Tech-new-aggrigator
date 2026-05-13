@@ -1,0 +1,44 @@
+name: Bob Intelligence Pipeline
+
+on:
+  schedule:
+    - cron: '0 * * * *'      # Hourly Scraper
+    - cron: '*/14 * * * *'   # Keep-Alive Ping (every 14 mins)
+  workflow_dispatch:         # Manual trigger
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # ─── Keep-Alive Logic ───
+      - name: Ping Render (Anti-Sleep)
+        run: |
+          RENDER_URL="${{ secrets.RENDER_URL }}"
+          if [ -n "$RENDER_URL" ]; then
+            echo "Pinging $RENDER_URL to keep it awake..."
+            curl -s -f "$RENDER_URL" > /dev/null || echo "Ping failed (site might be down)"
+          else
+            echo "RENDER_URL secret not set, skipping ping."
+          fi
+
+      # ─── Crawler Logic (Only on the hour) ───
+      - name: Run Intelligence Crawler
+        if: github.event.schedule == '0 * * * *' || github.event_name == 'workflow_dispatch'
+        env:
+          INGEST_URL: ${{ secrets.INGEST_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          # Install Playwright browsers for the crawler
+          python -m playwright install chromium
+          
+          echo "Starting Hourly Intelligence Crawl..."
+          # Run one cycle (we'll ensure main.py handles a single pass if needed, 
+          # but usually we want it to exit so the action finishes)
+          export SINGLE_PASS=true
+          python main.py

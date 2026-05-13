@@ -1,0 +1,35 @@
+{
+  "name": "tech-news-aggregator",
+  "version": "1.0.0",
+  "description": "Tech News Aggregator SaaS",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "dev:all": "concurrently \"npm run dev\" \"set PYTHONIOENCODING=utf-8 && ..\\backend\\.venv\\Scripts\\python.exe ..\\backend\\main.py\"",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.9.3",
+    "date-fns": "^3.6.0",
+    "dotenv": "^17.4.2",
+    "drizzle-orm": "^0.45.2",
+    "lucide-react": "^0.378.0",
+    "next": "^16.2.6",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "react-markdown": "^10.1.0",
+    "stripe": "^15.8.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "concurrently": "^9.2.1",
+    "drizzle-kit": "^0.31.10",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^16.2.6",
+    "typescript": "^5.4.5"
+  }
+}
