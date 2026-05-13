@@ -845,23 +845,18 @@ def status():
 def trigger_crawl():
     if crawl_lock.locked():
         return jsonify({"error": "Crawler is already in progress"}), 429
-    
-    # Run in background thread to avoid timeout
     threading.Thread(target=manual_crawl_task).start()
     return jsonify({"message": "Intelligence synthesis started in background"}), 202
 
 def manual_crawl_task():
     with crawl_lock:
-        global engine_status
         engine_status["is_running"] = True
         try:
             log_header("REMOTE TRIGGER RECEIVED — STARTING SYNTHESIS")
-            # Run the async main loop in the thread
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             stats = loop.run_until_complete(main())
             loop.close()
-            
             engine_status["last_run"] = datetime.datetime.now().isoformat()
             engine_status["total_articles_synced"] += stats if stats else 0
             engine_status["last_error"] = None
@@ -872,34 +867,46 @@ def manual_crawl_task():
             engine_status["is_running"] = False
 
 def run_periodic_daemon():
-    """Maintain the background loop for autonomous updates."""
+    """Background loop — runs the crawler autonomously on each interval."""
     log("SYS", "DAEMON", f"Autonomous mode active. Interval: {CRAWL_INTERVAL}s")
-    while True:
-        if not crawl_lock.locked():
-            manual_crawl_task()
-        time.sleep(CRAWL_INTERVAL)
 
-if __name__ == "__main__":
-    # Environment Check
-    single_pass = os.getenv("SINGLE_PASS", "false").lower() == "true"
-    
-    # Pre-crawl Health Check for Ingestion Target
+    # Pre-crawl Health Check
     if INGEST_URL.startswith("http"):
         root_url = "/".join(INGEST_URL.split("/")[:3])
         try:
             requests.get(root_url, timeout=10)
             log("OK", "SYS", "Ingestion target verified")
-        except:
+        except Exception:
             log("WARN", "SYS", "Ingestion target unreachable")
 
-    if single_pass:
+    while True:
+        if not crawl_lock.locked():
+            manual_crawl_task()
+        time.sleep(CRAWL_INTERVAL)
+
+
+# ─── Production Bootstrap ─────────────────────────────────────────
+# Gunicorn imports this module — start the daemon on first import.
+# The guard prevents duplicate threads if reloaders re-import it.
+_daemon_started = False
+
+def _start_daemon():
+    global _daemon_started
+    if not _daemon_started and os.getenv("SINGLE_PASS", "false").lower() != "true":
+        _daemon_started = True
+        threading.Thread(target=run_periodic_daemon, daemon=True).start()
+        log_header("BOB INTELLIGENCE ENGINE — PRODUCTION (GUNICORN)")
+
+_start_daemon()
+
+
+if __name__ == "__main__":
+    # CI/CD single-pass mode (GitHub Actions)
+    if os.getenv("SINGLE_PASS", "false").lower() == "true":
         log_header("BOB INTELLIGENCE — CI/CD SINGLE PASS")
         asyncio.run(main())
     else:
-        # Start the autonomous daemon in a background thread
-        threading.Thread(target=run_periodic_daemon, daemon=True).start()
-        
-        # Start the Web API
+        # Local development fallback
         port = int(os.getenv("PORT", "8080"))
-        log_header(f"BOB INTELLIGENCE API ACTIVE ON PORT {port}")
-        app.run(host="0.0.0.0", port=port)
+        log_header(f"BOB INTELLIGENCE DEV SERVER — PORT {port}")
+        app.run(host="0.0.0.0", port=port, debug=False)
