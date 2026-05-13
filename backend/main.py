@@ -803,29 +803,102 @@ async def run_daemon():
     log_header("CRAWLER STOPPED")
 
 
+import threading
+from flask import Flask, jsonify
+import time
+
+# --- SaaS API Configuration ---
+app = Flask(__name__)
+crawl_lock = threading.Lock()
+engine_status = {
+    "last_run": None,
+    "is_running": False,
+    "total_articles_synced": 0,
+    "last_error": None
+}
+
+@app.route("/")
+def home():
+    return jsonify({
+        "service": "Bob Intelligence Engine",
+        "status": "online",
+        "endpoints": {
+            "GET /": "Service info",
+            "GET /status": "Current engine metrics",
+            "POST /crawl": "Trigger manual intelligence synthesis"
+        }
+    })
+
+@app.route("/status")
+def status():
+    return jsonify({
+        "engine": "Bob Intelligence",
+        "state": engine_status,
+        "config": {
+            "interval_seconds": CRAWL_INTERVAL,
+            "ingest_target": INGEST_URL
+        }
+    })
+
+@app.route("/crawl", methods=["POST"])
+def trigger_crawl():
+    if crawl_lock.locked():
+        return jsonify({"error": "Crawler is already in progress"}), 429
+    
+    # Run in background thread to avoid timeout
+    threading.Thread(target=manual_crawl_task).start()
+    return jsonify({"message": "Intelligence synthesis started in background"}), 202
+
+def manual_crawl_task():
+    with crawl_lock:
+        global engine_status
+        engine_status["is_running"] = True
+        try:
+            log_header("REMOTE TRIGGER RECEIVED — STARTING SYNTHESIS")
+            # Run the async main loop in the thread
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            stats = loop.run_until_complete(main())
+            loop.close()
+            
+            engine_status["last_run"] = datetime.datetime.now().isoformat()
+            engine_status["total_articles_synced"] += stats if stats else 0
+            engine_status["last_error"] = None
+        except Exception as e:
+            log("ERROR", "API", f"Crawl failed: {e}")
+            engine_status["last_error"] = str(e)
+        finally:
+            engine_status["is_running"] = False
+
+def run_periodic_daemon():
+    """Maintain the background loop for autonomous updates."""
+    log("SYS", "DAEMON", f"Autonomous mode active. Interval: {CRAWL_INTERVAL}s")
+    while True:
+        if not crawl_lock.locked():
+            manual_crawl_task()
+        time.sleep(CRAWL_INTERVAL)
+
 if __name__ == "__main__":
-    # Check if we should run a single pass (ideal for GitHub Actions) or a daemon loop
+    # Environment Check
     single_pass = os.getenv("SINGLE_PASS", "false").lower() == "true"
     
-    # Pre-crawl Health Check: Ensure the ingestion API is reachable
+    # Pre-crawl Health Check for Ingestion Target
     if INGEST_URL.startswith("http"):
         root_url = "/".join(INGEST_URL.split("/")[:3])
-        log("SYS", "HEALTH", f"Verifying ingestion target: {root_url}")
         try:
-            # Simple GET to root to wake up the service if it's sleeping
-            requests.get(root_url, timeout=15)
-            log("OK", "HEALTH", "Target is awake and reachable")
-        except Exception as e:
-            log("WARN", "HEALTH", f"Target health check failed: {e}. Proceeding anyway...")
+            requests.get(root_url, timeout=10)
+            log("OK", "SYS", "Ingestion target verified")
+        except:
+            log("WARN", "SYS", "Ingestion target unreachable")
 
-    try:
-        if single_pass:
-            log_header("BOB INTELLIGENCE CRAWLER — SINGLE PASS MODE")
-            asyncio.run(main())
-        else:
-            asyncio.run(run_daemon())
-    except KeyboardInterrupt:
-        print("\n  Crawler stopped by user.")
-    except Exception as e:
-        print(f"\n  Crawler failed: {e}")
-        sys.exit(1)
+    if single_pass:
+        log_header("BOB INTELLIGENCE — CI/CD SINGLE PASS")
+        asyncio.run(main())
+    else:
+        # Start the autonomous daemon in a background thread
+        threading.Thread(target=run_periodic_daemon, daemon=True).start()
+        
+        # Start the Web API
+        port = int(os.getenv("PORT", "8080"))
+        log_header(f"BOB INTELLIGENCE API ACTIVE ON PORT {port}")
+        app.run(host="0.0.0.0", port=port)

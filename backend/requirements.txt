@@ -1,3 +1,7 @@
 crawl4ai
 beautifulsoup4
 requests
+flask
+playwright
+python-dotenv
+asyncio

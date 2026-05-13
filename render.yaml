@@ -14,5 +14,19 @@ services:
       - key: NEXT_PUBLIC_SITE_URL
         sync: false # e.g. https://bob-news.onrender.com
 
-  # Note: Render Background Workers are not available on the free plan.
-  # We are using GitHub Actions as the "Backend Crawler" instead.
+  - type: web
+    name: bob-intelligence-backend
+    env: python
+    plan: free
+    region: oregon
+    buildCommand: cd backend && pip install -r requirements.txt && python -m playwright install chromium
+    startCommand: cd backend && python main.py
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: INGEST_URL
+        sync: false # e.g. https://bob-news-frontend.onrender.com/api/ingest
+      - key: CRAWL_INTERVAL
+        value: "3600"
+      - key: PYTHON_VERSION
+        value: 3.11.7
