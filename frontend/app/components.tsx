@@ -1,26 +1,36 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
+
+// ─── Serialized article type for client components ───
+interface SerializedArticle {
+  id: string;
+  headline: string;
+  summary: string;
+  pub_date: string; // ISO string after serialization
+  editor_name: string;
+  source_name: string;
+  original_url: string;
+  tags: string[];
+  content: string | null;
+  disclaimer_text: string | null;
+}
 
 // ─── Animated Counter ───
 export function AnimatedCounter({ value, label }: { value: number; label: string }) {
   const [count, setCount] = useState(0);
-  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const target = value;
-    if (target === 0) return;
+    if (value === 0) return;
 
-    let start = 0;
     const duration = 1200;
     const startTime = performance.now();
 
     function animate(now: number) {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      // Ease out cubic
       const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.floor(eased * target));
+      setCount(Math.floor(eased * value));
       if (progress < 1) requestAnimationFrame(animate);
     }
 
@@ -28,7 +38,7 @@ export function AnimatedCounter({ value, label }: { value: number; label: string
   }, [value]);
 
   return (
-    <div className="stat" ref={ref}>
+    <div className="stat">
       <span className="stat-value">{count.toLocaleString()}</span>
       <span className="stat-label">{label}</span>
     </div>
@@ -112,14 +122,12 @@ export function SearchBar({ onSearch }: { onSearch: (q: string) => void }) {
 }
 
 // ─── Interactive Feed (combines search + filter + cards) ───
-export function InteractiveFeed({ articles }: { articles: any[] }) {
+export function InteractiveFeed({ articles }: { articles: SerializedArticle[] }) {
   const [search, setSearch] = useState('');
   const [activeSource, setActiveSource] = useState('all');
 
-  // All unique sources
   const sources = [...new Set(articles.map(a => a.source_name))];
 
-  // Filter articles
   const filtered = articles.filter(article => {
     const matchesSearch = search === '' || 
       article.headline.toLowerCase().includes(search.toLowerCase()) ||
@@ -128,8 +136,7 @@ export function InteractiveFeed({ articles }: { articles: any[] }) {
     return matchesSearch && matchesSource;
   });
 
-  // Group by tag
-  const sections: Record<string, any[]> = {};
+  const sections: Record<string, SerializedArticle[]> = {};
   filtered.forEach(article => {
     const tag = article.tags?.[0] || '#General';
     if (!sections[tag]) sections[tag] = [];

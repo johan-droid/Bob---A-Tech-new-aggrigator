@@ -4,8 +4,10 @@ import { articles } from '@/db/schema';
 import { desc, lt } from 'drizzle-orm';
 import { format, subHours } from 'date-fns';
 
+type Article = typeof articles.$inferSelect;
+
 export default async function ArchivePage() {
-  let oldArticles: any[] = [];
+  let oldArticles: Article[] = [];
   
   try {
     const yesterday = subHours(new Date(), 24);
@@ -13,12 +15,12 @@ export default async function ArchivePage() {
       .from(articles)
       .where(lt(articles.pub_date, yesterday))
       .orderBy(desc(articles.pub_date));
-  } catch (error) {
-    console.error("Archive fetch error:", error);
+  } catch {
+    // Return empty state on DB error
   }
 
   // Group by date
-  const groupedByDate: Record<string, any[]> = {};
+  const groupedByDate: Record<string, Article[]> = {};
   oldArticles.forEach(article => {
     const dateKey = format(article.pub_date, 'MMMM d, yyyy');
     if (!groupedByDate[dateKey]) groupedByDate[dateKey] = [];

@@ -8,7 +8,7 @@ import { AnimatedCounter, LiveClock, InteractiveFeed, ScrollToTop } from './comp
 export const revalidate = 60;
 
 export default async function HomePage() {
-  let latestArticles: any[] = [];
+  let latestArticles: typeof articles.$inferSelect[] = [];
   let totalCount = 0;
   let sourceCount = 0;
   let isConnected = true;
@@ -25,7 +25,7 @@ export default async function HomePage() {
 
     const sources = new Set(latestArticles.map(a => a.source_name));
     sourceCount = sources.size;
-  } catch (error) {
+  } catch {
     isConnected = false;
   }
 
@@ -69,7 +69,7 @@ export default async function HomePage() {
         ) : latestArticles.length === 0 ? (
           <div className="empty-state">
             <h3>No Signals Detected</h3>
-            <p>The crawler hasn't captured new intelligence this cycle. <Link href="/archive" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>Explore the archive</Link>.</p>
+            <p>The crawler hasn&apos;t captured new intelligence this cycle. <Link href="/archive" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>Explore the archive</Link>.</p>
           </div>
         ) : (
           <InteractiveFeed articles={serializedArticles} />
