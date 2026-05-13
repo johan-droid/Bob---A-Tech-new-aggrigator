@@ -14,15 +14,10 @@ jobs:
         uses: actions/checkout@v4
 
       # ─── Keep-Alive Logic ───
-      - name: Ping Render (Anti-Sleep)
+      - name: Ping Render (Keep-Alive)
         run: |
-          RENDER_URL="${{ secrets.RENDER_URL }}"
-          if [ -n "$RENDER_URL" ]; then
-            echo "Pinging $RENDER_URL to keep it awake..."
-            curl -s -f "$RENDER_URL" > /dev/null || echo "Ping failed (site might be down)"
-          else
-            echo "RENDER_URL secret not set, skipping ping."
-          fi
+          curl -s https://bob-a-tech-new-aggrigator.onrender.com > /dev/null
+          echo "Keep-alive ping sent to https://bob-a-tech-new-aggrigator.onrender.com"
 
       # ─── Crawler Logic (Only on the hour) ───
       - name: Run Intelligence Crawler

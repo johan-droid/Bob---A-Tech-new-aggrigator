@@ -12,7 +12,7 @@ services:
       - key: NODE_VERSION
         value: 18.17.0
       - key: NEXT_PUBLIC_SITE_URL
-        sync: false # e.g. https://bob-news.onrender.com
+        value: https://bob-a-tech-new-aggrigator.onrender.com
 
   - type: web
     name: bob-intelligence-backend
@@ -25,7 +25,7 @@ services:
       - key: DATABASE_URL
         sync: false
       - key: INGEST_URL
-        sync: false # e.g. https://bob-news-frontend.onrender.com/api/ingest
+        value: https://bob-a-tech-new-aggrigator.onrender.com/api/ingest
       - key: CRAWL_INTERVAL
         value: "3600"
       - key: PYTHON_VERSION
