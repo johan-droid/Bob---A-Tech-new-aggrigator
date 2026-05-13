@@ -26,6 +26,7 @@ export async function POST(req: Request) {
         original_url: article.original_url,
         tags: article.tags || [],
         content: article.content || null,
+        disclaimer_text: article.disclaimer_text || null,
       }).onConflictDoNothing();
     }
 

@@ -20,6 +20,7 @@ export const articles = pgTable('articles', {
   content: text('content'),
   search_vector: tsvector('search_vector'),
   created_at: timestamp('created_at').defaultNow().notNull(),
+  disclaimer_text: text('disclaimer_text'),
 }, (table) => {
   return {
     searchIdx: index('search_idx').on(table.search_vector),
