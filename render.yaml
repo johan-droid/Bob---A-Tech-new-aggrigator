@@ -12,7 +12,7 @@ services:
       - key: NODE_VERSION
         value: 18.17.0
       - key: NEXT_PUBLIC_SITE_URL
-        value: https://bob-a-tech-new-aggrigator.onrender.com
+        value: https://bob-a-tech-new-aggrigator.vercel.app
       - key: NEXT_PUBLIC_SITE_NAME
         value: Bob
       - key: NEXT_PUBLIC_SITE_DESCRIPTION
@@ -31,7 +31,7 @@ services:
       - key: DATABASE_URL
         sync: false
       - key: INGEST_URL
-        value: https://bob-a-tech-new-aggrigator.onrender.com/api/ingest
+        value: https://bob-a-tech-new-aggrigator.vercel.app/api/ingest
       - key: CRAWL_INTERVAL
         value: "3600"
       - key: PYTHON_VERSION

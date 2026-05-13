@@ -23,8 +23,7 @@ jobs:
       - name: Run Intelligence Crawler
         if: github.event.schedule == '0 * * * *' || github.event_name == 'workflow_dispatch'
         env:
-          INGEST_URL: ${{ secrets.INGEST_URL }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          INGEST_URL: "https://bob-a-tech-new-aggrigator.vercel.app/api/ingest"
         run: |
           cd backend
           python -m pip install --upgrade pip
